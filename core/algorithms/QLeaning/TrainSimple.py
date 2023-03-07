@@ -1,13 +1,17 @@
 from pettingzoo.mpe import simple_v2
 from QLearningBox import QLearningBox
 
-env = simple_v2.env(max_cycles=10, continuous_actions=False)
-env.reset()
+# env = simple_v2.env(max_cycles=10, continuous_actions=False)
+# env.reset()
 
-for agent in env.agent_iter():
-    env.reset()
+parallel_env = simple_v2.parallel_env(max_cycles=10, continuous_actions=False)
+observations = parallel_env.reset()
+
+
+for agent in parallel_env.agents:
+    parallel_env.reset()
     qlearn = QLearningBox(
-        env,
+        env=parallel_env,
         agent=agent,
         alpha=0.1,
         gamma=0.6,
@@ -21,8 +25,6 @@ for agent in env.agent_iter():
         filename=f"{train_dir}/qtable_{agent}.csv",
         plotFile=f"{train_dir}/qtable_{agent}",
     )
-
-    break
 
 
 #

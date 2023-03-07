@@ -9,14 +9,22 @@ class QLearningBox:
     ):
         self.env = env
         self.agent = agent
-        # discretizando o espaco de estados
-        # self.num_states = np.array([1000, 1000])
-        # self.num_states = np.round(self.num_states, 0).astype(int) + 1
-        self.action_spaces = env.action_space(agent)
-        self.observation_spaces = env.observation_space(agent)
 
-        # inicializando uma q-table com 3 dimensoes: x, velocidade, acao
-        self.Q = np.zeros([1000 + 1, 1000 + 1, self.action_spaces.n])
+        self.action_space = self.env.action_spaces[self.agent]
+        self.observation_space = self.env.observation_spaces[self.agent]
+
+        self.max_range = 10
+        self.max_velocity = 10
+
+        self.observation_space.high = np.array(
+            [self.max_velocity, self.max_velocity, self.max_range, self.max_range]
+        )
+        self.observation_space.low = np.array(
+            [-self.max_velocity, -self.max_velocity, -self.max_range, -self.max_range]
+        )
+
+        # inicializando uma q-table com 3 dimensoes: posicao, velocidade e acao
+        self.Q = np.zeros((self.max_range, self.max_velocity, self.action_space.n))
 
         self.alpha = alpha
         self.gamma = gamma
@@ -27,12 +35,17 @@ class QLearningBox:
 
     def select_action(self, state_adj):
         if np.random.random() < 1 - self.epsilon:
-            return np.argmax(self.Q[state_adj[0], state_adj[1]])
-        return np.random.randint(0, self.action_spaces.n)
+            return np.argmax(self.Q[state_adj[0], state_adj[1], state_adj[2]])
+        return np.random.randint(0, self.action_space.n)
 
     def transform_state(self, state):
-        state_adj = [1000, 1000]
-        return np.round(state_adj, 0).astype(int)
+        state_adj = state[self.agent] - self.observation_space.low
+        state_adj = np.round(state_adj, 0).astype(int)
+
+        # TODO
+        # transform tuple of four (positionx, positiony, velocityx, velocityy) into a tuple of tree ((positionx, positiony), (velocityx, velocityy), action))
+        state_adj = (state_adj[0], state_adj[1], state_adj[2], state_adj[3])
+        return state_adj
 
     def train(self, filename, plotFile=None):
         # Initialize variables to track rewards
@@ -53,21 +66,23 @@ class QLearningBox:
             qtd_actions = 0
             while done != True:
                 action = self.select_action(state_adj)
-                self.env.step(action)
-
-                state2 = self.env.state()
-                reward = self.env.rewards[self.agent]
-                done = self.env.truncations[self.agent]
+                state2, reward, done, _ = self.env.step(action)
 
                 # Discretize state2
                 state2_adj = self.transform_state(state2)
 
-                delta = self.alpha * (
-                    reward
-                    + self.gamma * np.max(self.Q[state2_adj[0], state2_adj[1]])
-                    - self.Q[state_adj[0], state_adj[1], action]
-                )
-                self.Q[state_adj[0], state_adj[1], action] += delta
+                # atualizacao automatica para estados terminais.
+                # TODO eh necessario?
+                if done and state2[0] >= 0.5:
+                    self.Q[state_adj[0], state_adj[1], action] = reward
+                # ajustando Q-valor para estados atuais
+                else:
+                    delta = self.alpha * (
+                        reward
+                        + self.gamma * np.max(self.Q[state2_adj[0], state2_adj[1]])
+                        - self.Q[state_adj[0], state_adj[1], action]
+                    )
+                    self.Q[state_adj[0], state_adj[1], action] += delta
 
                 # Update variables
                 tot_reward += reward
