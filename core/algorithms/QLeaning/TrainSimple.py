@@ -4,7 +4,7 @@ from QLearningBox import QLearningBox
 # env = simple_v2.env(max_cycles=10, continuous_actions=False)
 # env.reset()
 
-parallel_env = simple_v2.parallel_env(max_cycles=10, continuous_actions=False)
+parallel_env = simple_v2.parallel_env(max_cycles=25, continuous_actions=False)
 observations = parallel_env.reset()
 
 
@@ -18,7 +18,7 @@ for agent in parallel_env.agents:
         epsilon=0.7,
         epsilon_min=0.05,
         epsilon_dec=0.99,
-        episodes=10000,
+        episodes=100000,
     )
     train_dir = "core/algorithms/QLeaning/"
     q_table = qlearn.train(

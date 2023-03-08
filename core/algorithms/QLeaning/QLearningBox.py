@@ -13,18 +13,37 @@ class QLearningBox:
         self.action_space = self.env.action_spaces[self.agent]
         self.observation_space = self.env.observation_spaces[self.agent]
 
-        self.max_range = 10
-        self.max_velocity = 10
+        self.range = 62
+        self.max_range_x_y = self.range
+        self.max_velocity = self.range
 
         self.observation_space.high = np.array(
-            [self.max_velocity, self.max_velocity, self.max_range, self.max_range]
+            [
+                self.max_velocity,
+                self.max_velocity,
+                self.max_range_x_y,
+                self.max_range_x_y,
+            ]
         )
         self.observation_space.low = np.array(
-            [-self.max_velocity, -self.max_velocity, -self.max_range, -self.max_range]
+            [
+                -self.max_velocity,
+                -self.max_velocity,
+                -self.max_range_x_y,
+                -self.max_range_x_y,
+            ]
         )
 
-        # inicializando uma q-table com 3 dimensoes: posicao, velocidade e acao
-        self.Q = np.zeros((self.max_range, self.max_velocity, self.action_space.n))
+        # inicializando uma q-table com 5 dimensoes: x, y, vx, vy e acao
+        self.Q = np.zeros(
+            (
+                self.max_range_x_y,
+                self.max_range_x_y,
+                self.max_velocity,
+                self.max_velocity,
+                self.action_space.n,
+            )
+        )
 
         self.alpha = alpha
         self.gamma = gamma
@@ -35,16 +54,16 @@ class QLearningBox:
 
     def select_action(self, state_adj):
         if np.random.random() < 1 - self.epsilon:
-            return np.argmax(self.Q[state_adj[0], state_adj[1], state_adj[2]])
+            x, y, vx, vy = state_adj + np.array([20, 20, 20, 20])
+
+            return np.argmax(self.Q[x, y, vx, vy])
+
         return np.random.randint(0, self.action_space.n)
 
     def transform_state(self, state):
-        state_adj = state[self.agent] - self.observation_space.low
+        state_adj = state * np.array([10, 10, 10, 10])
         state_adj = np.round(state_adj, 0).astype(int)
 
-        # TODO
-        # transform tuple of four (positionx, positiony, velocityx, velocityy) into a tuple of tree ((positionx, positiony), (velocityx, velocityy), action))
-        state_adj = (state_adj[0], state_adj[1], state_adj[2], state_adj[3])
         return state_adj
 
     def train(self, filename, plotFile=None):
@@ -58,7 +77,7 @@ class QLearningBox:
             # Initialize parameters
             done = False
             tot_reward, reward = 0, 0
-            state = self.env.reset()
+            state = self.env.reset()[self.agent]
 
             # discretizando o estado
             state_adj = self.transform_state(state)
@@ -66,7 +85,11 @@ class QLearningBox:
             qtd_actions = 0
             while done != True:
                 action = self.select_action(state_adj)
-                state2, reward, done, _ = self.env.step(action)
+                state2, reward, _, done, _ = self.env.step({self.agent: action})
+
+                state2 = state2[self.agent]
+                reward = reward[self.agent]
+                done = done[self.agent]
 
                 # Discretize state2
                 state2_adj = self.transform_state(state2)
@@ -110,6 +133,8 @@ class QLearningBox:
                         actions_per_episode[len(actions_per_episode) - 1],
                     )
                 )
+
+            self.env.render()
 
         # TODO Q eh um vetor tridimensional. savetxt nao trabalha com arrays com mais de 2
         # dimensoes. Eh necessario fazer ajustes para armazenar a Q-table neste caso.
