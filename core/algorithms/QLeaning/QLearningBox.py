@@ -13,9 +13,10 @@ class QLearningBox:
         self.action_space = self.env.action_spaces[self.agent]
         self.observation_space = self.env.observation_spaces[self.agent]
 
-        self.range = 62
-        self.max_range_x_y = self.range
-        self.max_velocity = self.range
+        self.full_range = 102
+        self.range = int((self.full_range - 2) / 2)
+        self.max_range_x_y = self.full_range
+        self.max_velocity = self.full_range
 
         self.observation_space.high = np.array(
             [
@@ -54,7 +55,9 @@ class QLearningBox:
 
     def select_action(self, state_adj):
         if np.random.random() < 1 - self.epsilon:
-            x, y, vx, vy = state_adj + np.array([20, 20, 20, 20])
+            x, y, vx, vy = state_adj + np.array(
+                [self.range, self.range, self.range, self.range]
+            )
 
             return np.argmax(self.Q[x, y, vx, vy])
 
@@ -93,15 +96,16 @@ class QLearningBox:
 
                 # Discretize state2
                 state2_adj = self.transform_state(state2)
+                x, y, vx, vy = state2_adj + np.array(
+                    [self.range, self.range, self.range, self.range]
+                )
 
                 delta = self.alpha * (
                     reward
-                    + self.gamma * np.max(self.Q[state2_adj[0], state2_adj[1]])
-                    - self.Q[state_adj[0], state_adj[1], action]
+                    + self.gamma * np.max(self.Q[x, y, vx, vy])
+                    - self.Q[x, y, vx, vy, action]
                 )
-                self.Q[
-                    state_adj[0], state_adj[1], state2_adj[2], state2_adj[3], action
-                ] += delta
+                self.Q[x, y, vx, vy, action] += delta
 
                 # Update variables
                 tot_reward += reward
