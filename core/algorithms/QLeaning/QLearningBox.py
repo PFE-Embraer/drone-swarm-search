@@ -94,18 +94,14 @@ class QLearningBox:
                 # Discretize state2
                 state2_adj = self.transform_state(state2)
 
-                # atualizacao automatica para estados terminais.
-                # TODO eh necessario?
-                if done and state2[0] >= 0.5:
-                    self.Q[state_adj[0], state_adj[1], action] = reward
-                # ajustando Q-valor para estados atuais
-                else:
-                    delta = self.alpha * (
-                        reward
-                        + self.gamma * np.max(self.Q[state2_adj[0], state2_adj[1]])
-                        - self.Q[state_adj[0], state_adj[1], action]
-                    )
-                    self.Q[state_adj[0], state_adj[1], action] += delta
+                delta = self.alpha * (
+                    reward
+                    + self.gamma * np.max(self.Q[state2_adj[0], state2_adj[1]])
+                    - self.Q[state_adj[0], state_adj[1], action]
+                )
+                self.Q[
+                    state_adj[0], state_adj[1], state2_adj[2], state2_adj[3], action
+                ] += delta
 
                 # Update variables
                 tot_reward += reward
