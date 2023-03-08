@@ -1,7 +1,7 @@
 from pettingzoo.mpe import simple_v2
 import sys
 
-env = simple_v2.env(max_cycles=25, continuous_actions=False, render_mode='human')
+env = simple_v2.env(max_cycles=50, continuous_actions=False, render_mode='human')
 
 def policy(observation, agent): 
     print(round(observation[0]*100))
