@@ -1,0 +1,8 @@
+keras==2.0.6
+numpy==1.16.4
+keras-rl==0.3.1
+tensorflow==1.13.1
+pettingzoo
+pygame
+numpy
+matplotlib

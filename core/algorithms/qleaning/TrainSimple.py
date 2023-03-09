@@ -1,5 +1,5 @@
 from pettingzoo.mpe import simple_v2
-from QLearningBox import QLearningBox
+from core.algorithms.qleaning.qLearning_box import QLearningBox
 
 from test import test_n_times
 
