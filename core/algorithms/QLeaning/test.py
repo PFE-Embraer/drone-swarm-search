@@ -6,19 +6,18 @@ def get_state(state):
     range = 50
     state_adj = state * np.array([10, 10, 10, 10])
     state_adj = np.round(state_adj, 0).astype(int)
-    x, y, vx, vy = state_adj + np.array(
-        [range, range, range, range]
-    )
+    x, y, vx, vy = state_adj + np.array([range, range, range, range])
     return x, y, vx, vy
 
 
-def test(q_table, agent):
-    env = simple_v2.parallel_env(max_cycles=30, continuous_actions=False)
+def test_n_times(n_times, q_table, agent):
+    env = simple_v2.parallel_env(
+        max_cycles=30, continuous_actions=False, render_mode="human"
+    )
 
     rewards = 0
 
-    for _ in range(0, 1000):
-
+    for _ in range(0, n_times):
         state = env.reset()[agent]
         state = get_state(state)
         done = False
@@ -31,6 +30,8 @@ def test(q_table, agent):
             state = get_state(state)
             reward = reward[agent]
             done = done[agent]
+
+            env.render()
 
         rewards += reward
     return rewards / 1000

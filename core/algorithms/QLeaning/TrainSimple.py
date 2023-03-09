@@ -1,6 +1,7 @@
 from pettingzoo.mpe import simple_v2
 from QLearningBox import QLearningBox
-from test import test
+
+from test import test_n_times
 
 # env = simple_v2.env(max_cycles=10, continuous_actions=False)
 # env.reset()
@@ -26,9 +27,8 @@ for agent in parallel_env.agents:
         plotFile=f"{train_dir}/qtable_{agent}",
     )
 
-    mean_reward = test(q_table, agent)
+    mean_reward = test_n_times(1, q_table, agent)
     print(f"Final reward:{mean_reward}")
 
-#
-# teste:
-#
+
+# use
